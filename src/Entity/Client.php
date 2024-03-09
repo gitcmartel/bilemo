@@ -31,7 +31,7 @@ class Client
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $city = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, options: ["default" => "CURRENT_TIMESTAMP"])]
     private ?\DateTimeInterface $creation_date = null;
 
     #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'client', orphanRemoval: true)]
