@@ -8,8 +8,11 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Constraints\PasswordStrength;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 #[ORM\Table(name: '`user`')]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_USERNAME', fields: ['username'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -22,6 +25,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 180)]
     #[Groups(["getUsers"])]
+    #[Assert\NotBlank(message: "You must enter a username")]
+    #[Assert\Length(
+        min: 1, 
+        max: 180, 
+        minMessage: "The username must be at least {{ limit }} character long", 
+        maxMessage: "The username must be a maximum of {{ limit }} characters"
+    )]
     private ?string $username = null;
 
     /**
@@ -34,18 +44,50 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
+    #[Assert\NotBlank(message: "You must enter a password")]
+    #[Assert\PasswordStrength([
+        'message' => 'Your password is too weak. Add numbers, upper, lower and special characters'
+    ])]
     private ?string $password = null;
 
     #[ORM\Column(length: 50, nullable: true)]
     #[Groups(["getUsers"])]
+    #[assert\Length(
+        min: 1,
+        max: 50, 
+        minMessage: "The name must be at least {{ limit }} character long", 
+        maxMessage: "The name must be a maximum of {{ limit }} characters"
+    )]
+    #[Assert\NotBlank([
+        'message' => 'You must enter a name'
+    ])]
     private ?string $name = null;
 
     #[ORM\Column(length: 50, nullable: true)]
     #[Groups(["getUsers"])]
+    #[assert\Length(
+        min: 1,
+        max: 50, 
+        minMessage: "The surname must be at least {{ limit }} character long", 
+        maxMessage: "The surname must be a maximum of {{ limit }} characters"
+    )]
+    #[Assert\NotBlank([
+        'message' => 'You must enter a surname'
+    ])]
     private ?string $surname = null;
 
     #[ORM\Column(length: 50)]
     #[Groups(["getUsers"])]
+    #[assert\Length(
+        max: 50, 
+        maxMessage : "The email must be a maximum of {{ limit }} characters"
+    )]
+    #[Assert\NotBlank([
+        'message' => 'You must enter an email adress'
+    ])]
+    #[Assert\Email([
+        'message' => 'Incorrect email address'
+    ])]
     private ?string $email = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, options: ["default" => "CURRENT_TIMESTAMP"])]
@@ -54,6 +96,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\ManyToOne(inversedBy: 'users')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotBlank([
+        'message' => 'You must enter a client id'
+    ])]
     #[Groups(["getUsers"])]
     private ?Client $client = null;
 
@@ -180,6 +225,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    #[ORM\PrePersist]
+    public function setCreationDateValue()
+    {
+        $this->creation_date = new \DateTimeImmutable();
+    }
+    
     public function getClient(): ?Client
     {
         return $this->client;
@@ -190,5 +241,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->client = $client;
 
         return $this;
+    }
+
+    public function __construct()
+    {
+        $this->roles = ['ROLE_USER'];
     }
 }
