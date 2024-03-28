@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Client
 {
     #[ORM\Id]
@@ -132,6 +133,12 @@ class Client
         $this->creation_date = $creation_date;
 
         return $this;
+    }
+
+    #[ORM\PrePersist]
+    public function setCreationDateValue()
+    {
+        $this->creation_date = new \DateTimeImmutable();
     }
 
     /**
