@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
 class Client
@@ -14,24 +15,31 @@ class Client
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getUsers"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(["getUsers"])]
     private ?string $name = null;
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Groups(["getUsers"])]
     private ?string $address = null;
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Groups(["getUsers"])]
     private ?string $address_complement = null;
 
     #[ORM\Column(length: 20, nullable: true)]
+    #[Groups(["getUsers"])]
     private ?string $postal_code = null;
 
     #[ORM\Column(length: 50, nullable: true)]
+    #[Groups(["getUsers"])]
     private ?string $city = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, options: ["default" => "CURRENT_TIMESTAMP"])]
+    #[Groups(["getUsers"])]
     private ?\DateTimeInterface $creation_date = null;
 
     #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'client', orphanRemoval: true)]
