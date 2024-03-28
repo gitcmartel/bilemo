@@ -7,6 +7,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
@@ -16,9 +17,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getUsers"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
+    #[Groups(["getUsers"])]
     private ?string $username = null;
 
     /**
@@ -34,19 +37,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $password = null;
 
     #[ORM\Column(length: 50, nullable: true)]
+    #[Groups(["getUsers"])]
     private ?string $name = null;
 
     #[ORM\Column(length: 50, nullable: true)]
+    #[Groups(["getUsers"])]
     private ?string $surname = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(["getUsers"])]
     private ?string $email = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, options: ["default" => "CURRENT_TIMESTAMP"])]
+    #[Groups(["getUsers"])]
     private ?\DateTimeInterface $creation_date = null;
 
     #[ORM\ManyToOne(inversedBy: 'users')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["getUsers"])]
     private ?Client $client = null;
 
     public function getId(): ?int
