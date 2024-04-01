@@ -8,10 +8,12 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
 #[ORM\HasLifecycleCallbacks]
-class Client
+class Client implements PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -20,22 +22,45 @@ class Client
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
+    #[Assert\NotBlank]
+    #[Assert\Length(
+        min: 1, 
+        max: 50, 
+        minMessage: "The name must be at least {{ limit }} character long", 
+        maxMessage: "The name must be a maximum of {{ limit }} characters"
+    )]
     #[Groups(["getUsers"])]
     private ?string $name = null;
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Assert\Length(
+        max: 100, 
+        maxMessage: "The address must be a maximum of {{ limit }} characters"
+    )]
     #[Groups(["getUsers"])]
     private ?string $address = null;
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Assert\Length(
+        max: 100,  
+        maxMessage: "The address complement must be a maximum of {{ limit }} characters"
+    )]
     #[Groups(["getUsers"])]
     private ?string $address_complement = null;
 
     #[ORM\Column(length: 20, nullable: true)]
+    #[Assert\Length(
+        max: 20, 
+        maxMessage: "The postal code must be a maximum of {{ limit }} characters"
+    )]
     #[Groups(["getUsers"])]
     private ?string $postal_code = null;
 
     #[ORM\Column(length: 50, nullable: true)]
+    #[Assert\Length(
+        max: 50, 
+        maxMessage: "The city must be a maximum of {{ limit }} characters"
+    )]
     #[Groups(["getUsers"])]
     private ?string $city = null;
 
@@ -45,6 +70,16 @@ class Client
 
     #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'client', orphanRemoval: true)]
     private Collection $users;
+
+    #[ORM\Column(length: 50)]
+    private ?string $email = null;
+
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "You must enter a password")]
+    #[Assert\PasswordStrength([
+        'message' => 'Your password is too weak. Add numbers, upper, lower and special characters'
+    ])]
+    private ?string $password = null;
 
     public function __construct()
     {
@@ -167,6 +202,33 @@ class Client
                 $user->setClient(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): static
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    /**
+     * @see PasswordAuthenticatedUserInterface
+     */
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
 
         return $this;
     }
