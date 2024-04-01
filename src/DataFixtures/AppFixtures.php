@@ -59,6 +59,8 @@ class AppFixtures extends Fixture
             $client->setPostalCode('73 200');
             $client->setCity('Mercury');
             $client->setCreationDate(new \DateTime);
+            $client->setPassword($this->passwordHasher->hashPassword($client, 'passwordtest!'.$i));
+            $client->setEmail('client'.$i.'@test.fr');
             $this->addReference('client'.$i, $client);
 
             $manager->persist($client);
