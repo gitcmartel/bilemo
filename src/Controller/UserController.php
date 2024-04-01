@@ -19,7 +19,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserController extends AbstractController
 {
-    #[Route('/api/users/{clientId}', name: 'users_by_client', methods:['GET'])]
+    #[Route('/api/client/{clientId}/users', name: 'users_by_client', methods:['GET'])]
     public function getUsersByClient($clientId, UserRepository $userRepository, ClientRepository $clientRepository, 
     SerializerInterface $serializer): JsonResponse
     {
