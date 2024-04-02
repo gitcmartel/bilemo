@@ -7,20 +7,40 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
-#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_USERNAME', fields: ['email'])]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 #[ORM\HasLifecycleCallbacks]
-class Client implements PasswordAuthenticatedUserInterface
+class Client implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     #[Groups(["getUsers"])]
     private ?int $id = null;
+
+    #[ORM\Column(length: 180)]
+    #[Groups(["getUsers"])]
+    private ?string $email = null;
+
+    /**
+     * @var list<string> The user roles
+     */
+    #[ORM\Column]
+    private array $roles = [];
+
+    /**
+     * @var string The hashed password
+     */
+    #[ORM\Column]
+    private ?string $password = null;
+
+    #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'client', orphanRemoval: true)]
+    private Collection $users;
 
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank]
@@ -69,19 +89,6 @@ class Client implements PasswordAuthenticatedUserInterface
     #[Groups(["getUsers"])]
     private ?\DateTimeInterface $creation_date = null;
 
-    #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'client', orphanRemoval: true)]
-    private Collection $users;
-
-    #[ORM\Column(length: 50)]
-    private ?string $email = null;
-
-    #[ORM\Column(length: 255)]
-    #[Assert\NotBlank(message: "You must enter a password")]
-    #[Assert\PasswordStrength([
-        'message' => 'Your password is too weak. Add numbers, upper, lower and special characters'
-    ])]
-    private ?string $password = null;
-
     public function __construct()
     {
         $this->users = new ArrayCollection();
@@ -92,9 +99,102 @@ class Client implements PasswordAuthenticatedUserInterface
         return $this->id;
     }
 
-    public function setId(int $id): static
+    public function getEmail(): ?string
     {
-        $this->id = $id;
+        return $this->email;
+    }
+
+    public function setEmail(string $email): static
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    /**
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
+     */
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     * @see UserInterface
+     *
+     * @return list<string>
+     */
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        // guarantee every user at least has ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    /**
+     * @param list<string> $roles
+     */
+    public function setRoles(array $roles): static
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    /**
+     * @see PasswordAuthenticatedUserInterface
+     */
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function eraseCredentials(): void
+    {
+        // If you store any temporary, sensitive data on the user, clear it here
+        // $this->plainPassword = null;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getUsers(): Collection
+    {
+        return $this->users;
+    }
+
+    public function addUser(User $user): static
+    {
+        if (!$this->users->contains($user)) {
+            $this->users->add($user);
+            $user->setClient($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUser(User $user): static
+    {
+        if ($this->users->removeElement($user)) {
+            // set the owning side to null (unless already changed)
+            if ($user->getClient() === $this) {
+                $user->setClient(null);
+            }
+        }
 
         return $this;
     }
@@ -175,62 +275,5 @@ class Client implements PasswordAuthenticatedUserInterface
     public function setCreationDateValue()
     {
         $this->creation_date = new \DateTimeImmutable();
-    }
-
-    /**
-     * @return Collection<int, User>
-     */
-    public function getUsers(): Collection
-    {
-        return $this->users;
-    }
-
-    public function addUser(User $user): static
-    {
-        if (!$this->users->contains($user)) {
-            $this->users->add($user);
-            $user->setClient($this);
-        }
-
-        return $this;
-    }
-
-    public function removeUser(User $user): static
-    {
-        if ($this->users->removeElement($user)) {
-            // set the owning side to null (unless already changed)
-            if ($user->getClient() === $this) {
-                $user->setClient(null);
-            }
-        }
-
-        return $this;
-    }
-
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(string $email): static
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    /**
-     * @see PasswordAuthenticatedUserInterface
-     */
-    public function getPassword(): ?string
-    {
-        return $this->password;
-    }
-
-    public function setPassword(string $password): static
-    {
-        $this->password = $password;
-
-        return $this;
     }
 }
