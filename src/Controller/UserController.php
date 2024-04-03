@@ -14,12 +14,14 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserController extends AbstractController
 {
     #[Route('/api/client/{clientId}/users', name: 'users_by_client', methods:['GET'])]
+    #[IsGranted('ROLE_USER', message: 'Vous \'avez pas les droits suffisants pour obtenir la liste des utilisateurs')]
     public function getUsersByClient($clientId, UserRepository $userRepository, ClientRepository $clientRepository, 
     SerializerInterface $serializer): JsonResponse
     {
@@ -36,6 +38,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/api/user/{id}', name: 'user', methods:['GET'])]
+    #[IsGranted('ROLE_USER', message: 'Vous \'avez pas les droits suffisants pour obtenir le detail d\'un utilisateur')]
     public function getClientUser(User $user, UserRepository $userRepository, SerializerInterface $serializer): JsonResponse
     {
         $jsonUser = $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
@@ -43,6 +46,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/api/user/{id}', name: 'delete_user', methods:['DELETE'])]
+    #[IsGranted('ROLE_USER', message: 'Vous \'avez pas les droits suffisants pour supprimer un utilisateur')]
     public function deleteUser(User $user, EntityManagerInterface $manager): JsonResponse
     {
         $manager->remove($user);
@@ -51,6 +55,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/api/user', name: 'add_user', methods:['POST'])]
+    #[IsGranted('ROLE_USER', message: 'Vous \'avez pas les droits suffisants pour créer un utilisateur')]
     public function addUser(Request $request, EntityManagerInterface $manager, ClientRepository $clientRepository, 
     SerializerInterface $serializer, ValidatorInterface $validator, UrlGeneratorInterface $urlGenerator, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
