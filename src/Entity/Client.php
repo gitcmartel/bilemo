@@ -276,4 +276,14 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->creation_date = new \DateTimeImmutable();
     }
+
+    /**
+     * Méthode getUsername qui permet de retourner le champ qui est utilisé pour l'authentification.
+     * 
+     * @return string
+     */
+    public function getUserName(): string
+    {
+        return $this->getUserIdentifier();
+    }
 }
