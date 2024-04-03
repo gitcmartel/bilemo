@@ -59,6 +59,9 @@ class AppFixtures extends Fixture
             $client->setPostalCode('73 200');
             $client->setCity('Mercury');
             $client->setCreationDate(new \DateTime);
+            $client->setPassword($this->passwordHasher->hashPassword($client, 'passwordtest!'.$i));
+            $client->setEmail('client'.$i.'@test.fr');
+            $client->setRoles(["ROLE_USER"]);
             $this->addReference('client'.$i, $client);
 
             $manager->persist($client);
@@ -71,11 +74,6 @@ class AppFixtures extends Fixture
             for ($j = 0; $j < 2; $j++) {
                 $user = new User();
                 $user->setUsername('Client'.$i.'User'.$j);
-                if ($j === 0){
-                    $user->setRoles(["ROLE_ADMIN"]);
-                } else {
-                    $user->setRoles(["ROLE_USER"]);
-                }
                 $user->setPassword($this->passwordHasher->hashPassword($user, 'passwordtest!'.$i));
                 $user->setName('Client'.$i.'Name'.$j);
                 $user->setSurname(('Client'.$i.'Surname'.$j));
