@@ -22,8 +22,21 @@ use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class UserController extends AbstractController
 {
+    /**
+     * Retrieve users associated with the authenticated client.
+     *  
+     * This method retrieves a list of users associated with the authenticated client.
+     * It utilizes caching to enhance performance by storing the serialized user data.
+     * 
+     * @param UserRepository $userRepository The repository for user entities.
+     * @param ClientRepository $clientRepository The repository for client entities.
+     * @param SerializerInterface $serializer The serializer used to serialize the user objects into JSON.
+     * @param TagAwareCacheInterface $cache The cache service used to store and retrieve user data.
+     * 
+     * @return JsonResponse A JSON response containing the serialized user information.
+     */
     #[Route('/api/client/users', name: 'users_by_client', methods:['GET'])]
-    #[IsGranted('ROLE_USER', message: 'Vous \'avez pas les droits suffisants pour obtenir la liste des utilisateurs')]
+    #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to obtain the list of users')]
     public function getUsersByClient(UserRepository $userRepository, ClientRepository $clientRepository, 
     SerializerInterface $serializer, TagAwareCacheInterface $cache): JsonResponse
     {
@@ -45,9 +58,19 @@ class UserController extends AbstractController
         }
     }
 
-
+    /**
+     * Retrieve details of a user associated with the authenticated client.
+     * 
+     * This method retrieves the details of a specific user associated with the authenticated client.
+     * 
+     * @param User $user The user entity to retrieve details for.
+     * @param UserRepository $userRepository The repository for user entities.
+     * @param SerializerInterface $serializer The serializer used to serialize the user object into JSON.
+     * 
+     * @return JsonResponse A JSON response containing the serialized user information.
+     */
     #[Route('/api/client/user/{id}', name: 'user', methods:['GET'])]
-    #[IsGranted('ROLE_USER', message: 'Vous \'avez pas les droits suffisants pour obtenir le detail d\'un utilisateur')]
+    #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to obtain the user\'s details')]
     public function getClientUser(User $user, UserRepository $userRepository, SerializerInterface $serializer): JsonResponse
     {
         // The client is the authenticated user
@@ -64,8 +87,20 @@ class UserController extends AbstractController
     }
 
 
+    /**
+     * Delete a user associated with the authenticated client.
+     * 
+     * This method deletes a specific user associated with the authenticated client.
+     * 
+     * @param User $user The user entity to be deleted.
+     * @param UserRepository $userRepository The repository for user entities.
+     * @param EntityManagerInterface $manager The entity manager used to manage entities.
+     * @param TagAwareCacheInterface $cache The cache service used to invalidate cached user data.
+     * 
+     * @return JsonResponse A JSON response indicating the success of the deletion.
+     */
     #[Route('/api/client/user/{id}', name: 'delete_user', methods:['DELETE'])]
-    #[IsGranted('ROLE_USER', message: 'Vous \'avez pas les droits suffisants pour supprimer un utilisateur')]
+    #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to delete a user')]
     public function deleteUser(User $user, UserRepository $userRepository, EntityManagerInterface $manager, TagAwareCacheInterface $cache): JsonResponse
     {
         // The client is the authenticated user
@@ -84,8 +119,25 @@ class UserController extends AbstractController
     }
 
 
+    /**
+     * Add a new user associated with the authenticated client.
+     * 
+     * This method creates a new user associated with the authenticated client.
+     * 
+     * @param Request $request The HTTP request object containing user data.
+     * @param EntityManagerInterface $manager The entity manager used to manage entities.
+     * @param ClientRepository $clientRepository The repository for client entities.
+     * @param SerializerInterface $serializer The serializer used to deserialize user data from JSON.
+     * @param ValidatorInterface $validator The validator used to validate user data.
+     * @param UrlGeneratorInterface $urlGenerator The URL generator used to generate resource URLs.
+     * @param UserPasswordHasherInterface $passwordHasher The password hasher used to hash user passwords.
+     * @param TagAwareCacheInterface $cache The cache service used to invalidate cached user data.
+     * 
+     * @return JsonResponse A JSON response indicating the success of the user creation along with the new user's details.
+     * @throws CustomHttpException If there are validation errors, it throws a custom HTTP exception.
+     */
     #[Route('/api/client/user', name: 'add_user', methods:['POST'])]
-    #[IsGranted('ROLE_USER', message: 'Vous \'avez pas les droits suffisants pour créer un utilisateur')]
+    #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to create a user')]
     public function addUser(Request $request, EntityManagerInterface $manager, ClientRepository $clientRepository, 
     SerializerInterface $serializer, ValidatorInterface $validator, UrlGeneratorInterface $urlGenerator, 
     UserPasswordHasherInterface $passwordHasher, TagAwareCacheInterface $cache): JsonResponse
@@ -100,7 +152,6 @@ class UserController extends AbstractController
         $errors = $validator->validate($user);
 
         if ($errors->count() > 0) {
-            //return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
             throw new CustomHttpException(400, $errors);
         }
 
