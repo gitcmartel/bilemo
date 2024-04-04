@@ -17,52 +17,83 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class UserController extends AbstractController
 {
-    #[Route('/api/client/{clientId}/users', name: 'users_by_client', methods:['GET'])]
+    #[Route('/api/client/users', name: 'users_by_client', methods:['GET'])]
     #[IsGranted('ROLE_USER', message: 'Vous \'avez pas les droits suffisants pour obtenir la liste des utilisateurs')]
-    public function getUsersByClient($clientId, UserRepository $userRepository, ClientRepository $clientRepository, 
-    SerializerInterface $serializer): JsonResponse
+    public function getUsersByClient(UserRepository $userRepository, ClientRepository $clientRepository, 
+    SerializerInterface $serializer, TagAwareCacheInterface $cache): JsonResponse
     {
-        $client = $clientRepository->find($clientId);
-        $users = $userRepository->findBy(["client" => $client]);
+        // The client is the authenticated user
+        $client = $this->getUser();
 
-        if ($users) {
-            $jsonUsers = $serializer->serialize($users, 'json', ['groups' => 'getUsers']);
+        $idCache = "getUsersByClient-" . $client->getId();
+
+        $jsonUsers = $cache->get($idCache, function (ItemInterface $item) use ($userRepository, $client, $serializer) {
+            $item->tag("userCache-" . $client->getId());
+            $users =  $userRepository->findBy(["client" => $client]);
+            return $serializer->serialize($users, 'json', ['groups' => 'getUsers']);
+        });
+
+        if ($jsonUsers) {
             return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
         } else {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
         }
-
     }
 
-    #[Route('/api/user/{id}', name: 'user', methods:['GET'])]
+
+    #[Route('/api/client/user/{id}', name: 'user', methods:['GET'])]
     #[IsGranted('ROLE_USER', message: 'Vous \'avez pas les droits suffisants pour obtenir le detail d\'un utilisateur')]
     public function getClientUser(User $user, UserRepository $userRepository, SerializerInterface $serializer): JsonResponse
     {
+        // The client is the authenticated user
+        $idClient = $this->getUser()->getId();
+
+        $user = $userRepository->findBy(["id" => $user->getId(), "client" => $idClient]);
+        
+        if (empty($user)) {
+            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+
         $jsonUser = $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
         return new JsonResponse($jsonUser, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/api/user/{id}', name: 'delete_user', methods:['DELETE'])]
+
+    #[Route('/api/client/user/{id}', name: 'delete_user', methods:['DELETE'])]
     #[IsGranted('ROLE_USER', message: 'Vous \'avez pas les droits suffisants pour supprimer un utilisateur')]
-    public function deleteUser(User $user, EntityManagerInterface $manager): JsonResponse
+    public function deleteUser(User $user, UserRepository $userRepository, EntityManagerInterface $manager, TagAwareCacheInterface $cache): JsonResponse
     {
+        // The client is the authenticated user
+        $idClient = $this->getUser()->getId();
+
+        $user = $userRepository->findOneBy(["id" => $user->getId(), "client" => $idClient]);
+
+        if (empty($user)) {
+            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+
+        $cache->invalidateTags(["userCache-" . $idClient]);
         $manager->remove($user);
         $manager->flush();
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
-    #[Route('/api/user', name: 'add_user', methods:['POST'])]
+
+    #[Route('/api/client/user', name: 'add_user', methods:['POST'])]
     #[IsGranted('ROLE_USER', message: 'Vous \'avez pas les droits suffisants pour créer un utilisateur')]
     public function addUser(Request $request, EntityManagerInterface $manager, ClientRepository $clientRepository, 
-    SerializerInterface $serializer, ValidatorInterface $validator, UrlGeneratorInterface $urlGenerator, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    SerializerInterface $serializer, ValidatorInterface $validator, UrlGeneratorInterface $urlGenerator, 
+    UserPasswordHasherInterface $passwordHasher, TagAwareCacheInterface $cache): JsonResponse
     {
         $user = $serializer->deserialize($request->getContent(), User::class, 'json');
 
-        $content = $request->toArray();
-        $idClient = $content['idClient'] ?? -1;
+        // The client is the authenticated user
+        $idClient = $this->getUser()->getId();
 
         $user->setClient($clientRepository->find($idClient));
 
@@ -80,6 +111,7 @@ class UserController extends AbstractController
         );
         $user->setPassword($hashedPassword);
 
+        $cache->invalidateTags(["userCache-" . $idClient]);
         $manager->persist($user);
         $manager->flush();
 
