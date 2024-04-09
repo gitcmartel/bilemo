@@ -38,6 +38,14 @@ use Hateoas\Configuration\Annotation as Hateoas;
  *      exclusion = @Hateoas\Exclusion(groups="getUsers")
  * )
  * 
+ * @Hateoas\Relation(
+ *      "get", 
+ *      href= @Hateoas\Route(
+ *          "getUsersByClient"
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="getUsers")
+ * )
+ * 
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\HasLifecycleCallbacks]
