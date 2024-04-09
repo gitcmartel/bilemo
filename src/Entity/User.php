@@ -48,6 +48,7 @@ use Hateoas\Configuration\Annotation as Hateoas;
  * 
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_USERNAME', fields: ['username'])]
 #[ORM\HasLifecycleCallbacks]
 class User implements PasswordAuthenticatedUserInterface
 {
