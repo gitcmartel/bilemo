@@ -15,6 +15,13 @@ use Hateoas\Configuration\Annotation as Hateoas;
  *          parameters = { "id" = "expr(object.getId())" }
  *      )
  * )
+ * 
+ *  * @Hateoas\Relation(
+ *      "get", 
+ *      href= @Hateoas\Route(
+ *          "getAllProducts"
+ *      )
+ * )
  */
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 class Product
