@@ -6,10 +6,49 @@ use App\Repository\UserRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-use Symfony\Component\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use Hateoas\Configuration\Annotation as Hateoas;
 
+
+/**
+ * @Hateoas\Relation(
+ *      "self", 
+ *      href= @Hateoas\Route(
+ *          "getUser", 
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="getUsers")
+ * )
+ * 
+ * @Hateoas\Relation(
+ *      "delete", 
+ *      href = @Hateoas\Route(
+ *          "deleteUser", 
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ), 
+ *      exclusion = @Hateoas\Exclusion(groups="getUsers")
+ * )
+ * 
+ * @Hateoas\Relation(
+ *      "post", 
+ *      href = @Hateoas\Route(
+ *          "addUser"
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="getUsers")
+ * )
+ * 
+ * @Hateoas\Relation(
+ *      "get", 
+ *      href= @Hateoas\Route(
+ *          "getUsersByClient"
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="getUsers")
+ * )
+ * 
+ */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_USERNAME', fields: ['username'])]
 #[ORM\HasLifecycleCallbacks]
 class User implements PasswordAuthenticatedUserInterface
 {
@@ -169,7 +208,7 @@ class User implements PasswordAuthenticatedUserInterface
     #[ORM\PrePersist]
     public function setCreationDateValue()
     {
-        $this->creation_date = new \DateTimeImmutable();
+        $this->creation_date = \DateTime::createFromImmutable(new \DateTimeImmutable());
     }
     
     public function getClient(): ?Client

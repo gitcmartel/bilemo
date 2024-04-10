@@ -5,7 +5,7 @@ namespace App\Exception;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
-class CustomHttpException extends HttpException
+class ConstraintViolationException extends HttpException
 {
 
     public function __construct(int $statusCode, ConstraintViolationListInterface $errors, \Throwable $previous = null, array $headers = [], ?int $code = 0)
