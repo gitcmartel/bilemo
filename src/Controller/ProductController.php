@@ -4,11 +4,13 @@ namespace App\Controller;
 
 use App\Entity\Product;
 use App\Repository\ProductRepository;
+use JMS\Serializer\SerializerInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use JMS\Serializer\SerializerInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
@@ -41,6 +43,15 @@ class ProductController extends AbstractController
      * 
      * @return JsonResponse The JSON response containing the list of products.
      */
+    #[OA\Response(
+        response: 200,
+        description: 'Returns the products list',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Product::class))
+        )
+    )]
+    #[OA\Tag(name: 'Products')]
     #[Route('/api/products', name: 'getAllProducts', methods: ['GET'])]
     #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to obtain the list of products')]
     public function getAllProducts(): JsonResponse
@@ -64,10 +75,20 @@ class ProductController extends AbstractController
     * It checks if the user has the necessary permissions to view the product details,
     * and returns a JSON response containing the serialized product information.
     * 
+    * 
     * @param Product $product The product entity to retrieve.
     * 
     * @return JsonResponse A JSON response containing the serialized product information.
     */
+    #[OA\Response(
+        response: 200,
+        description: 'Returns a product details',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Product::class))
+        )
+    )]
+    #[OA\Tag(name: 'Products')]
     #[Route('/api/product/{id}', name: 'getProduct', methods: ['GET'])]
     #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to obtain the product details')]
     public function getProduct(Product $product): JsonResponse
