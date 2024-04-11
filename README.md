@@ -16,9 +16,9 @@ Symfony CLI : https://symfony.com/download
 
 5 - At the root of the project duplicate the .env file and rename it to .env.local
 
-6 - Enter your database connection string in the DATABASE_URL variable.
+6 - Create the mysql database 'bilemo' and execute this command to create the table structure : php bin/console doctrine:migrations:migrate
 
-7 - Create the mysql database 'bilemo' and execute this command to create the table structure : php bin/console doctrine:migrations:migrate
+7 - Enter your database connection string in the DATABASE_URL variable.
 
 8 - Insert the DataFixtures into the database : php bin/console doctrine:fixtures:load
 
