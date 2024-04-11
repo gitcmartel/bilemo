@@ -33,3 +33,5 @@ openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_
 12 - Create the private jwt key by executing this command in the gitbash console (and enter and save a strong passphrase)
 
 openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout
+
+13 - Enter a login and password of an existing user in the NELMIO_API_LOGIN and NELMIO_API_PASSWORD variables of the .env.local file.
