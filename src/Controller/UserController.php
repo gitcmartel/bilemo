@@ -7,6 +7,10 @@ use App\Exception\ConstraintViolationException;
 use App\Repository\ClientRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\SerializationContext;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,11 +19,10 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use JMS\Serializer\SerializerInterface;
-use JMS\Serializer\SerializationContext;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+
 
 class UserController extends AbstractController
 {
@@ -70,7 +73,17 @@ class UserController extends AbstractController
      * 
      * 
      * @return JsonResponse A JSON response containing the serialized user information.
+     * 
      */
+    #[OA\Response(
+        response: 200,
+        description: 'Returns the users list',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: User::class, groups: ['getUsers']))
+        )
+    )]
+    #[OA\Tag(name: 'Users')]
     #[Route('/api/client/users', name: 'getUsersByClient', methods:['GET'])]
     #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to obtain the list of users')]
     public function getUsersByClient(): JsonResponse
@@ -95,10 +108,36 @@ class UserController extends AbstractController
      * 
      * This method retrieves the details of a specific user associated with the authenticated client.
      * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Returns a user",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=User::class, groups={"getUsers"}))
+     *     )
+     * )
+     * @OA\Parameter(
+     *     name="id",
+     *     in="query",
+     *     description="The user's ID",
+     *     @OA\Schema(type="int")
+     * )
+     * @OA\Tag(name="Users")
+     * 
      * @param User $user The user entity to retrieve details for.
      * 
      * @return JsonResponse A JSON response containing the serialized user information.
+     * 
      */
+    #[OA\Response(
+        response: 200,
+        description: 'Returns a user',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: User::class, groups: ['getUsers']))
+        )
+    )]
+    #[OA\Tag(name: 'Users')]
     #[Route('/api/client/user/{id}', name: 'getUser', methods:['GET'])]
     #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to obtain the user\'s details')]
     public function getClientUser(User $user): JsonResponse
@@ -121,10 +160,16 @@ class UserController extends AbstractController
      * 
      * This method deletes a specific user associated with the authenticated client.
      * 
+     * 
      * @param User $user The user entity to be deleted.
      * 
      * @return JsonResponse A JSON response indicating the success of the deletion.
      */
+    #[OA\Response(
+        response: 204,
+        description: 'Deletes a user',
+    )]
+    #[OA\Tag(name: 'Users')]
     #[Route('/api/client/user/{id}', name: 'deleteUser', methods:['DELETE'])]
     #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to delete a user')]
     public function deleteUser(User $user): JsonResponse
@@ -150,11 +195,25 @@ class UserController extends AbstractController
      * 
      * This method creates a new user associated with the authenticated client.
      * 
+     * 
+     * 
      * @param Request $request The HTTP request object containing user data.
      * 
      * @return JsonResponse A JSON response indicating the success of the user creation along with the new user's details.
      * @throws ConstraintViolationException If there are validation errors, it throws a custom HTTP exception.
      */
+    #[OA\Response(
+        response: 200,
+        description: 'Creates a user',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: User::class, groups: ['getUsers']))
+        )
+    )]
+    #[OA\RequestBody(
+        content: new OA\JsonContent(ref: new Model(type: User::class, groups: ['createUser']))
+    )]
+    #[OA\Tag(name: 'Users')]
     #[Route('/api/client/user', name: 'addUser', methods:['POST'])]
     #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to create a user')]
     public function addUser(Request $request): JsonResponse
