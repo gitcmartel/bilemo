@@ -8,6 +8,7 @@ Git : https://git-scm.com/
 Composer : https://getcomposer.org/
 Scoop : https://scoop.sh/
 Symfony CLI : https://symfony.com/download
+
 2 - Start the git bash application
 
 3 - In the directory of your choice on your web server, clone the github repository, here is the command : git clone https://github.com/gitcmartel/bilemo.git
@@ -34,4 +35,8 @@ openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_
 
 openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout
 
-13 - Enter a login and password of an existing user in the NELMIO_API_LOGIN and NELMIO_API_PASSWORD variables of the .env.local file.
+13 - Enter your passphrase in the JWT_PASSPHRASE variable of the .env.local file.
+
+14 - Enter a login and password of an existing user in the NELMIO_API_LOGIN and NELMIO_API_PASSWORD variables of the .env.local file.
+
+You can access the API documentation through this url : https://localhost:8000/api/doc
