@@ -3,9 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Exception\ConstraintViolationException;
 use App\Repository\ClientRepository;
 use App\Repository\UserRepository;
+use App\Service\ValidationErrorService;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
@@ -35,7 +35,7 @@ class UserController extends AbstractController
     private ValidatorInterface $validator;
     private UrlGeneratorInterface $urlGenerator;
     private UserPasswordHasherInterface $passwordHasher;
-
+    private ValidationErrorService $validationErrorService;
 
     /**
      * 
@@ -49,11 +49,12 @@ class UserController extends AbstractController
      * @param ValidatorInterface $validator The validator used to validate user data.
      * @param UrlGeneratorInterface $urlGenerator The URL generator used to generate resource URLs.
      * @param UserPasswordHasherInterface $passwordHasher The password hasher used to hash user passwords.
+     * @param ValidationErrorService $validationErrorService The service that handles validations errors.
      * 
      */
     public function __construct(UserRepository $userRepository, SerializerInterface $serializer, TagAwareCacheInterface $cache, 
     EntityManagerInterface $manager, ClientRepository $clientRepository, ValidatorInterface $validator, UrlGeneratorInterface $urlGenerator, 
-    UserPasswordHasherInterface $passwordHasher) 
+    UserPasswordHasherInterface $passwordHasher, ValidationErrorService $validationErrorService) 
     {
         $this->userRepository = $userRepository;
         $this->serializer = $serializer;
@@ -63,6 +64,7 @@ class UserController extends AbstractController
         $this->validator = $validator;
         $this->urlGenerator = $urlGenerator;
         $this->passwordHasher = $passwordHasher;
+        $this->validationErrorService = $validationErrorService;
     }
 
     /**
@@ -200,7 +202,6 @@ class UserController extends AbstractController
      * @param Request $request The HTTP request object containing user data.
      * 
      * @return JsonResponse A JSON response indicating the success of the user creation along with the new user's details.
-     * @throws ConstraintViolationException If there are validation errors, it throws a custom HTTP exception.
      */
     #[OA\Response(
         response: 200,
@@ -228,7 +229,7 @@ class UserController extends AbstractController
         $errors = $this->validator->validate($user);
 
         if ($errors->count() > 0) {
-            throw new ConstraintViolationException(400, $errors);
+            return $this->validationErrorService->createValidationErrorResponse($errors);
         }
 
         // Password hashing
