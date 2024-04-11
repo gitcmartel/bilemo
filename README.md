@@ -14,6 +14,20 @@ Symfony CLI : https://symfony.com/download
 
 4 - Run the following command to get the project dependencies : composer update
 
-5 - Create the mysql database 'bilemo' and execute this command to create the table structure : php bin/console doctrine:migrations:migrate
+5 - At the root of the project duplicate the .env file and rename it to .env.local
 
-6 - Insert the DataFixtures into the database : php bin/console doctrine:fixtures:load
+6 - Enter your database connection string in the DATABASE_URL variable.
+
+7 - Create the mysql database 'bilemo' and execute this command to create the table structure : php bin/console doctrine:migrations:migrate
+
+8 - Insert the DataFixtures into the database : php bin/console doctrine:fixtures:load
+
+9 - Create jwt folder in config folder
+
+10 - Create the public jwt key by executing this command in the gitbash console (and enter and save a strong passphrase)
+
+openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096
+
+11 - Create the private jwt key by executing this command in the gitbash console (and enter and save a strong passphrase)
+
+openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout
