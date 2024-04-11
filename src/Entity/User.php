@@ -59,7 +59,7 @@ class User implements PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
-    #[Groups(["getUsers"])]
+    #[Groups(["getUsers", "createUser"])]
     #[Assert\NotBlank(message: "You must enter a username")]
     #[Assert\Length(
         min: 1, 
@@ -70,6 +70,7 @@ class User implements PasswordAuthenticatedUserInterface
     private ?string $username = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["createUser"])]
     #[Assert\NotBlank(message: "You must enter a password")]
     #[Assert\PasswordStrength([
         'message' => 'Your password is too weak. Add numbers, upper, lower and special characters'
@@ -77,7 +78,7 @@ class User implements PasswordAuthenticatedUserInterface
     private ?string $password = null;
 
     #[ORM\Column(length: 50, nullable: true)]
-    #[Groups(["getUsers"])]
+    #[Groups(["getUsers", "createUser"])]
     #[assert\Length(
         min: 1,
         max: 50, 
@@ -90,7 +91,7 @@ class User implements PasswordAuthenticatedUserInterface
     private ?string $name = null;
 
     #[ORM\Column(length: 50, nullable: true)]
-    #[Groups(["getUsers"])]
+    #[Groups(["getUsers", "createUser"])]
     #[assert\Length(
         min: 1,
         max: 50, 
@@ -103,7 +104,7 @@ class User implements PasswordAuthenticatedUserInterface
     private ?string $surname = null;
 
     #[ORM\Column(length: 50)]
-    #[Groups(["getUsers"])]
+    #[Groups(["getUsers", "createUser"])]
     #[assert\Length(
         max: 50, 
         maxMessage : "The email must be a maximum of {{ limit }} characters"
