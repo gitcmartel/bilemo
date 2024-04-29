@@ -146,8 +146,8 @@ class UserController extends AbstractController
     {
         // The client is the authenticated user
         $idClient = $this->getUser()->getId();
-        
-        if (empty($user) && $user->getId() !== $idClient) {
+
+        if (empty($user) || $user->getClient()->getId() !== $idClient) {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
         }
 
