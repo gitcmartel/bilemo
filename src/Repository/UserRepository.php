@@ -48,6 +48,17 @@ class UserRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+        /**
+     * Retrieves the number of pages of users for the associated client.
+     *
+     *
+     * @param Client $client The instance of the Customer entity for which the items should be retrieved.
+     * @param int $page The current page number (starts at 1).
+     * @param int $limit The maximum number of elements to display per page.
+     *
+     * @return int The number of pages.
+     *
+     */
     public function getNumberOfPagesByClientWithPagination(Client $client, $page, $limit)
     {
         $qb = $this->createQueryBuilder('b')
