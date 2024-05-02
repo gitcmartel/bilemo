@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Product;
+use App\Service\PaginatedResponseProducts;
 use App\Repository\ProductRepository;
 use JMS\Serializer\SerializerInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
@@ -66,9 +67,19 @@ class ProductController extends AbstractController
         $jsonProductList = $this->cache->get($idCache, function (ItemInterface $item) use ($page, $limit) {
             $item->tag("productsCache");
             $productList = $this->productRepository->findAllWithPagination($page, $limit);
-            return $this->serializer->serialize($productList, 'json');
+            $totalItems = $this->productRepository->count([]);
+            $totalPages = ceil($totalItems / $limit);
+
+            $paginatedResponse = new PaginatedResponseProducts(
+                $productList, 
+                $page, 
+                $totalPages, 
+                $limit
+            );
+
+            return $this->serializer->serialize($paginatedResponse, 'json');
         });
-        
+
         return new JsonResponse($jsonProductList, Response::HTTP_OK, [], true);
     }
 
