@@ -88,16 +88,19 @@ class UserController extends AbstractController
     #[OA\Tag(name: 'Users')]
     #[Route('/api/client/users', name: 'getUsersByClient', methods:['GET'])]
     #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to obtain the list of users')]
-    public function getUsersByClient(): JsonResponse
+    public function getUsersByClient(Request $request): JsonResponse
     {
         // The client is the authenticated user
         $client = $this->getUser();
+    
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 5);
 
-        $idCache = "userCache-" . $client->getId();
+        $idCache = "userCache-" . $client->getId() . $page . '-' . $limit;
 
-        $jsonUsers = $this->cache->get($idCache, function (ItemInterface $item) use ($client) {
+        $jsonUsers = $this->cache->get($idCache, function (ItemInterface $item) use ($client, $page, $limit) {
             $item->tag("userCache-" . $client->getId());
-            $users =  $this->userRepository->findBy(["client" => $client]);
+            $users =  $this->userRepository->findByClientWithPagination($client, $page, $limit);
             $context = SerializationContext::create()->setGroups(["getUsers"]);
             return $this->serializer->serialize($users, 'json', $context);
         });
