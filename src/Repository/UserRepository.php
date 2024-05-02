@@ -57,7 +57,7 @@ class UserRepository extends ServiceEntityRepository
             ->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit);
     
-        $results = $qb->getQuery()->getResult();
+        $qb->getQuery()->getResult();
     
         return $qb->select('COUNT(b.id)')->getQuery()->getSingleScalarResult();
     }
