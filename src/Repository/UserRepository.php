@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\User;
+use App\Entity\Client;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -19,6 +20,32 @@ class UserRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, User::class);
+    }
+
+    /**
+     * Retrieves a paginated list of items associated with a specific customer.
+     *
+     * This method allows effective pagination on the results obtained
+     * for a given customer. It uses the QueryBuilder to build the query, 
+     * filter results by client, and apply pagination constraints.
+     *
+     * @param Client $client The instance of the Customer entity for which the items should be retrieved.
+     * @param int $page The current page number (starts at 1).
+     * @param int $limit The maximum number of elements to display per page.
+     *
+     * @return array Items found for the specified client, limited to the requested page.
+     *               Each page returns an array of entities matching the criteria.
+     *
+     */
+    public function findByClientWithPagination(Client $client, $page, $limit)
+    {
+        $qb = $this->createQueryBuilder('b')
+            ->where('b.client = :client')
+            ->setParameter('client', $client)
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+    
+        return $qb->getQuery()->getResult();
     }
 
     //    /**
