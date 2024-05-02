@@ -2,7 +2,11 @@
 
 namespace App\Service;
 
-
+/**
+ * This class represents a paginated response containing a list of elements,
+ * information about the current page, total pages and limit
+ * elements per page.
+ */
 
 class PaginatedResponse
 {
@@ -14,6 +18,14 @@ class PaginatedResponse
 
     protected $limit;
 
+    /**
+     * CLass Constructor
+     * 
+     * @param array $items       Current page elements list
+     * @param int   $currentPage Current page number
+     * @param int   $totalPages  Total number of pages
+     * @param int   $limit       Limit of elements per page
+     */
     public function __construct($items, $currentPage, $totalPages, $limit)
     {
         $this->items = $items;
