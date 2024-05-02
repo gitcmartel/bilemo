@@ -9,6 +9,7 @@ use Nelmio\ApiDocBundle\Annotation\Model;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Routing\Attribute\Route;
@@ -40,6 +41,7 @@ class ProductController extends AbstractController
      * This method fetch all products from the database, serializes them in JSON format,
      * and caches them to improve performance on subsequent queries.
      * 
+     * @param Request $request The current HTTP request. Used to access request data like headers, parameters, and body content.
      * 
      * @return JsonResponse The JSON response containing the list of products.
      */
@@ -54,13 +56,16 @@ class ProductController extends AbstractController
     #[OA\Tag(name: 'Products')]
     #[Route('/api/products', name: 'getAllProducts', methods: ['GET'])]
     #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to obtain the list of products')]
-    public function getAllProducts(): JsonResponse
+    public function getAllProducts(Request $request): JsonResponse
     {
-        $idCache = "productsCache";
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 10);
 
-        $jsonProductList = $this->cache->get($idCache, function (ItemInterface $item) {
-            $item->tag("productsCache");
-            $productList = $this->productRepository->findAll();
+        $idCache = "productsCache-" . $page . '-' . $limit;
+
+        $jsonProductList = $this->cache->get($idCache, function (ItemInterface $item) use ($page, $limit) {
+            $item->tag("productsCache" . $page . '-' . $limit);
+            $productList = $this->productRepository->findAllWithPagination($page, $limit);
             return $this->serializer->serialize($productList, 'json');
         });
         
