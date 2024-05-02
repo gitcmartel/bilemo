@@ -21,6 +21,19 @@ class ProductRepository extends ServiceEntityRepository
         parent::__construct($registry, Product::class);
     }
 
+    /**
+     * Retrieves a paginated list of items.
+     *
+     * This method allows effective pagination on the results obtained
+     * It uses the QueryBuilder to build the query, 
+     * and apply pagination constraints.
+     *
+     * @param int $page The current page number (starts at 1).
+     * @param int $limit The maximum number of elements to display per page.
+     *
+     * @return array Items found limited to the requested page.
+     *
+     */
     public function findAllWithPagination($page, $limit) 
     {
         $qb = $this->createQueryBuilder('b')
