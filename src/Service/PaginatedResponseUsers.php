@@ -45,6 +45,10 @@ use JMS\Serializer\Annotation\Groups;
  * 
  */
 
+ /**
+  * This class extends the PaginatedResponse class and adds HATEOAS relationships
+  * for user pagination.
+  */
 class PaginatedResponseUsers extends PaginatedResponse
 {
     #[Groups(["getUsers"])]
