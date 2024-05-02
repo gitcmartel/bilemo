@@ -48,6 +48,20 @@ class UserRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    public function getNumberOfPagesByClientWithPagination(Client $client, $page, $limit)
+    {
+        $qb = $this->createQueryBuilder('b')
+            ->select('b')
+            ->where('b.client = :client')
+            ->setParameter('client', $client)
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+    
+        $results = $qb->getQuery()->getResult();
+    
+        return $qb->select('COUNT(b.id)')->getQuery()->getSingleScalarResult();
+    }
+
     //    /**
     //     * @return User[] Returns an array of User objects
     //     */
