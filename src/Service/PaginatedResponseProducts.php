@@ -42,6 +42,10 @@ use Hateoas\Configuration\Annotation as Hateoas;
  * 
  */
 
+  /**
+  * This class extends the PaginatedResponse class and adds HATEOAS relationships
+  * for product pagination.
+  */
 class PaginatedResponseProducts extends PaginatedResponse
 {
     public function getProducts()
