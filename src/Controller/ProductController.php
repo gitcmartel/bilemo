@@ -64,7 +64,7 @@ class ProductController extends AbstractController
         $idCache = "productsCache-" . $page . '-' . $limit;
 
         $jsonProductList = $this->cache->get($idCache, function (ItemInterface $item) use ($page, $limit) {
-            $item->tag("productsCache" . $page . '-' . $limit);
+            $item->tag("productsCache");
             $productList = $this->productRepository->findAllWithPagination($page, $limit);
             return $this->serializer->serialize($productList, 'json');
         });
