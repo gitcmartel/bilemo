@@ -3,12 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\Product;
+use App\Service\PaginatedResponseProducts;
 use App\Repository\ProductRepository;
 use JMS\Serializer\SerializerInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Routing\Attribute\Route;
@@ -40,6 +42,7 @@ class ProductController extends AbstractController
      * This method fetch all products from the database, serializes them in JSON format,
      * and caches them to improve performance on subsequent queries.
      * 
+     * @param Request $request The current HTTP request. Used to access request data like headers, parameters, and body content.
      * 
      * @return JsonResponse The JSON response containing the list of products.
      */
@@ -54,16 +57,29 @@ class ProductController extends AbstractController
     #[OA\Tag(name: 'Products')]
     #[Route('/api/products', name: 'getAllProducts', methods: ['GET'])]
     #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to obtain the list of products')]
-    public function getAllProducts(): JsonResponse
+    public function getAllProducts(Request $request): JsonResponse
     {
-        $idCache = "productsCache";
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 10);
 
-        $jsonProductList = $this->cache->get($idCache, function (ItemInterface $item) {
+        $idCache = "productsCache-" . $page . '-' . $limit;
+
+        $jsonProductList = $this->cache->get($idCache, function (ItemInterface $item) use ($page, $limit) {
             $item->tag("productsCache");
-            $productList = $this->productRepository->findAll();
-            return $this->serializer->serialize($productList, 'json');
+            $productList = $this->productRepository->findAllWithPagination($page, $limit);
+            $totalItems = $this->productRepository->count([]);
+            $totalPages = ceil($totalItems / $limit);
+
+            $paginatedResponse = new PaginatedResponseProducts(
+                $productList, 
+                $page, 
+                $totalPages, 
+                $limit
+            );
+
+            return $this->serializer->serialize($paginatedResponse, 'json');
         });
-        
+
         return new JsonResponse($jsonProductList, Response::HTTP_OK, [], true);
     }
 

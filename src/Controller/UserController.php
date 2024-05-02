@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Repository\ClientRepository;
 use App\Repository\UserRepository;
+use App\Service\PaginatedResponseUsers;
 use App\Service\ValidationErrorService;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializerInterface;
@@ -73,6 +74,7 @@ class UserController extends AbstractController
      * This method retrieves a list of users associated with the authenticated client.
      * It utilizes caching to enhance performance by storing the serialized user data.
      * 
+     * @param Request $request The current HTTP request. Used to access request data like headers, parameters, and body content.
      * 
      * @return JsonResponse A JSON response containing the serialized user information.
      * 
@@ -88,18 +90,31 @@ class UserController extends AbstractController
     #[OA\Tag(name: 'Users')]
     #[Route('/api/client/users', name: 'getUsersByClient', methods:['GET'])]
     #[IsGranted('ROLE_USER', message: 'You do not have sufficient rights to obtain the list of users')]
-    public function getUsersByClient(): JsonResponse
+    public function getUsersByClient(Request $request): JsonResponse
     {
         // The client is the authenticated user
         $client = $this->getUser();
+    
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 5);
 
-        $idCache = "userCache-" . $client->getId();
+        $idCache = "userCache-" . $client->getId() . $page . '-' . $limit;
 
-        $jsonUsers = $this->cache->get($idCache, function (ItemInterface $item) use ($client) {
+        $jsonUsers = $this->cache->get($idCache, function (ItemInterface $item) use ($client, $page, $limit) {
             $item->tag("userCache-" . $client->getId());
-            $users =  $this->userRepository->findBy(["client" => $client]);
+            $users =  $this->userRepository->findByClientWithPagination($client, $page, $limit);
             $context = SerializationContext::create()->setGroups(["getUsers"]);
-            return $this->serializer->serialize($users, 'json', $context);
+            $totalItems = $this->userRepository->getNumberOfPagesByClientWithPagination($client, $page, $limit);
+            $totalPages = ceil($totalItems / $limit);
+
+            $paginatedResponse = new PaginatedResponseUsers(
+                $users, 
+                $page, 
+                $totalPages, 
+                $limit
+            );
+
+            return $this->serializer->serialize($paginatedResponse, 'json', $context);
         });
 
         return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
